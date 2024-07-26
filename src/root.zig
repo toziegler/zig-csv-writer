@@ -19,8 +19,15 @@ const Config = struct {
     filename: []const u8,
 };
 
-pub fn CSVWriterType(
+pub fn CSVWriter(
     Row: anytype,
+) type {
+    return CSVWriterWithPrecision(Row, 2);
+}
+
+pub fn CSVWriterWithPrecision(
+    Row: anytype,
+    float_precision: comptime_int,
 ) type {
     return struct {
         const Self = @This();
@@ -109,7 +116,8 @@ pub fn CSVWriterType(
                             try writer.print("{d}", .{@field(row, f.name)});
                         },
                         .Float => {
-                            try writer.print("{d:.4}", .{@field(row, f.name)});
+                            const format_str = std.fmt.comptimePrint("{{d:.{d}}}", .{float_precision});
+                            try writer.print(format_str, .{@field(row, f.name)});
                         },
                         .Pointer => {
                             try writer.print("{s}", .{@field(row, f.name)});

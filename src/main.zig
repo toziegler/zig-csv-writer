@@ -17,7 +17,7 @@ pub fn main() !void {
         .cpus = 0.1,
     };
 
-    var csvwriter = csv_writer.CSVWriterType(Config).init(.{
+    var csvwriter = csv_writer.CSVWriter(Config).init(.{
         .print_header = .once,
         .print_target = .both,
         .filename = "result.csv",
