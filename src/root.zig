@@ -1,42 +1,187 @@
 const std = @import("std");
-const testing = std.testing;
 
+/// Enum representing the options for printing the header.
 const PrintHeader = enum {
+    /// Always print the header.
     always,
+    /// Print the header once.
     once,
+    /// Never print the header.
     never,
 };
 
+/// Enum representing the target for printing.
 const PrintTarget = enum {
+    /// Print to CSV file.
     csv,
+    /// Print to standard output.
     stdout,
+    /// Print to both CSV file and standard output.
     both,
 };
 
+/// Configuration structure for CSVWriter.
 const Config = struct {
+    /// Option for printing the header.
     print_header: PrintHeader,
+    /// Target for printing.
     print_target: PrintTarget,
+    /// Filename for the CSV file.
     filename: []const u8,
 };
 
-pub fn CSVWriter(Row: anytype) type {
+/// Creates a CSVWriter with default float precision.
+///
+/// # Example
+/// ```zig
+/// const std = @import("std");
+/// const csv_writer = @import("csv-writer");
+///
+/// const Row = struct {
+///     name: *const [4:0]u8 = "test",
+///     ip: []const u8 = "127.0.0.1",
+///     samples: usize,
+///     count: usize,
+///     cpus: f64,
+/// };
+///
+/// pub fn main() !void {
+///     const row = Row{
+///         .samples = 10,
+///         .count = 1,
+///         .cpus = 0.1,
+///     };
+///
+///     var csvwriter = csv_writer.CSVWriter(Row).init(.{
+///         .print_header = .once,
+///         .print_target = .both,
+///         .filename = "result.csv",
+///     });
+///
+///     try csvwriter.add_row(row);
+/// }
+/// ```
+pub fn CSVWriter(
+    /// Type-Struct which defines the columns of the rows
+    Row: anytype,
+) type {
     return CSVWriterWithPrecision(Row, 2);
 }
 
-pub fn CSVWriterWithPrecision(Row: anytype, float_precision: comptime_int) type {
+/// Creates a CSVWriter with specified float precision.
+///
+/// # Example
+/// ```zig
+/// const std = @import("std");
+/// const csv_writer = @import("csv-writer");
+///
+/// const Row = struct {
+///     name: *const [4:0]u8 = "test",
+///     ip: []const u8 = "127.0.0.1",
+///     samples: usize,
+///     count: usize,
+///     cpus: f64,
+/// };
+///
+/// pub fn main() !void {
+///     const row = Row{
+///         .samples = 10,
+///         .count = 1,
+///         .cpus = 0.1,
+///     };
+///
+///     var csvwriter = csv_writer.CSVWriterWithPrecision(Row, 3).init(.{
+///         .print_header = .once,
+///         .print_target = .both,
+///         .filename = "result.csv",
+///     });
+///
+///     try csvwriter.add_row(row);
+/// }
+/// ```
+pub fn CSVWriterWithPrecision(
+    /// Type-Struct which defines the columns of the rows
+    Row: anytype,
+    /// Number of decimal positions to print for floats
+    float_precision: comptime_int,
+) type {
     return struct {
         const Self = @This();
         config: Config,
         printed_header: bool = false,
 
-        pub fn init(config: Config) Self {
+        /// Initializes the CSVWriter with the given configuration.
+        ///
+        /// # Returns
+        /// - `Self`: An instance of the CSVWriter.
+        ///
+        /// # Example
+        /// ```zig
+        /// const std = @import("std");
+        /// const csv_writer = @import("csv-writer");
+        ///
+        /// const Row = struct {
+        ///     name: *const [4:0]u8 = "test",
+        ///     ip: []const u8 = "127.0.0.1",
+        ///     samples: usize,
+        ///     count: usize,
+        ///     cpus: f64,
+        /// };
+        ///
+        /// pub fn main() !void {
+        ///     var csvwriter = csv_writer.CSVWriter(Config).init(.{
+        ///         .print_header = .once,
+        ///         .print_target = .both,
+        ///         .filename = "result.csv",
+        ///     });
+        /// }
+        /// ```
+        pub fn init(
+            ///  The configuration for the CSVWriter.
+            config: Config,
+        ) Self {
             return Self{
                 .config = config,
                 .printed_header = false,
             };
         }
 
-        pub fn add_row(self: *Self, row: Row) !void {
+        /// Adds a row to the CSV file or stdout based on the configuration.
+        ///
+        /// # Example
+        /// ```zig
+        /// const std = @import("std");
+        /// const csv_writer = @import("csv-writer");
+        ///
+        /// const Row = struct {
+        ///     name: *const [4:0]u8 = "test",
+        ///     ip: []const u8 = "127.0.0.1",
+        ///     samples: usize,
+        ///     count: usize,
+        ///     cpus: f64,
+        /// };
+        ///
+        /// pub fn main() !void {
+        ///     const row = Row{
+        ///         .samples = 10,
+        ///         .count = 1,
+        ///         .cpus = 0.1,
+        ///     };
+        ///
+        ///     var csvwriter = csv_writer.CSVWriter(Row).init(.{
+        ///         .print_header = .once,
+        ///         .print_target = .both,
+        ///         .filename = "result.csv",
+        ///     });
+        ///
+        ///     try csvwriter.add_row(row);
+        /// }
+        /// ```
+        pub fn add_row(
+            self: *Self,
+            /// The row to be added.
+            row: Row,
+        ) !void {
             const print_header_csv = !try self.file_exists();
 
             const print_header = switch (self.config.print_header) {
@@ -61,6 +206,10 @@ pub fn CSVWriterWithPrecision(Row: anytype, float_precision: comptime_int) type 
             }
         }
 
+        /// Checks if the CSV file exists.
+        ///
+        /// # Returns
+        /// - `bool`: `true` if the file exists, `false` otherwise.
         fn file_exists(self: *const Self) !bool {
             std.fs.cwd().access(self.config.filename, .{ .mode = .read_write }) catch |err| switch (err) {
                 error.FileNotFound => return false,
@@ -69,11 +218,21 @@ pub fn CSVWriterWithPrecision(Row: anytype, float_precision: comptime_int) type 
             return true;
         }
 
+        /// Writes a row to standard output.
+        ///
+        /// # Parameters
+        /// - `row`: The row to be written.
+        /// - `print_header`: Boolean indicating whether to print the header.
         fn row_to_stdout(row: Row, print_header: bool) !void {
             const writer = std.io.getStdOut().writer();
             try serialize_row(writer, row, print_header);
         }
 
+        /// Writes a row to the CSV file.
+        ///
+        /// # Parameters
+        /// - `row`: The row to be written.
+        /// - `print_header`: Boolean indicating whether to print the header.
         fn row_to_csv(self: *const Self, row: Row, print_header: bool) !void {
             const file = try open_or_create_file(self.config.filename);
             defer file.close();
@@ -86,13 +245,29 @@ pub fn CSVWriterWithPrecision(Row: anytype, float_precision: comptime_int) type 
             try serialize_row(writer, row, print_header);
         }
 
+        /// Opens or creates the CSV file.
+        ///
+        /// # Parameters
+        /// - `filename`: The name of the file to be opened or created.
+        ///
+        /// # Returns
+        /// - `std.fs.File`: The file handle.
         fn open_or_create_file(filename: []const u8) !std.fs.File {
             return std.fs.cwd().openFile(filename, .{ .mode = .read_write }) catch |err| switch (err) {
-                error.FileNotFound => std.fs.cwd().createFile(filename, .{ .read = true }),
+                error.FileNotFound => std.fs.cwd().createFile(filename, .{ .read = true, .truncate = true }),
                 else => return err,
             };
         }
 
+        /// Serializes a row to the given writer.
+        ///
+        /// # Parameters
+        /// - `writer`: The writer to which the row is serialized.
+        /// - `row`: The row to be serialized.
+        /// - `print_header`: Boolean indicating whether to print the header.
+        ///
+        /// # Returns
+        /// - `void`: On successful serialization.
         fn serialize_row(writer: anytype, row: Row, print_header: bool) !void {
             if (print_header) {
                 inline for (std.meta.fields(@TypeOf(row)), 0..) |f, i| {
