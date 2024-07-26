@@ -5,9 +5,9 @@ zig fetch --save https://github.com/toziegler/zig-csv-writer/archive/master.tar.
 ```
 
 ```zig
-    const csvwriter = b.dependency("csvwriter", .{
+    const csvwriter = b.dependency("csv-writer", .{
         .target = target,
         .optimize = optimize,
     });
-    exe.root_module.addImport(name: "csvwriter", module: csvwriter.module("csv-writer"));
+    exe.root_module.addImport(name: "csv-writer", module: csvwriter.module("csv-writer"));
 ```
