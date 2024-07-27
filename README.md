@@ -9,7 +9,7 @@ zig fetch --save https://github.com/toziegler/zig-csv-writer/archive/master.tar.
         .target = target,
         .optimize = optimize,
     });
-    exe.root_module.addImport(name: "csv-writer", module: csvwriter.module("csv-writer"));
+    exe.root_module.addImport("csv-writer", csvwriter.module("csv-writer"));
 ```
 
 # Documentation
