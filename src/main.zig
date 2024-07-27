@@ -8,6 +8,7 @@ const Row = struct {
     samples: usize,
     count: usize,
     cpus: f64,
+    use_config: bool,
 };
 
 pub fn main() !void {
@@ -15,6 +16,7 @@ pub fn main() !void {
         .samples = 10,
         .count = 1,
         .cpus = 0.1,
+        .use_config = true,
     };
 
     var csvwriter = csv_writer.CSVWriter(Row).init(.{

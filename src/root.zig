@@ -289,6 +289,9 @@ pub fn CSVWriterWithPrecision(
                     .Pointer => {
                         try writer.print("{s}", .{@field(row, f.name)});
                     },
+                    .Bool => {
+                        try writer.print("{}", .{@field(row, f.name)});
+                    },
                     else => {
                         @panic("Type not supported for serialization");
                     },
