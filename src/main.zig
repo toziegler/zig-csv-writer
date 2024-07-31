@@ -2,6 +2,11 @@ const std = @import("std");
 const assert = std.debug.assert;
 const csv_writer = @import("csv-writer");
 
+const Ordering = enum {
+    unordered,
+    ordered,
+};
+
 const Row = struct {
     name: *const [4:0]u8 = "test",
     ip: []const u8 = "127.0.0.1",
@@ -9,6 +14,7 @@ const Row = struct {
     count: usize,
     cpus: f64,
     use_config: bool,
+    ordering: Ordering,
 };
 
 pub fn main() !void {
@@ -17,6 +23,7 @@ pub fn main() !void {
         .count = 1,
         .cpus = 0.1,
         .use_config = true,
+        .ordering = .unordered,
     };
 
     var csvwriter = csv_writer.CSVWriter(Row).init(.{
